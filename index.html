@@ -150,16 +150,10 @@
       align-items: flex-end;
       overflow: hidden;
     }
-    .hero .section-bg iframe.hero-video {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100vw;
-      height: 56.25vw;
-      min-width: 177.78vh;
-      min-height: 100vh;
-      transform: translate(-50%, -50%);
-      border: 0;
+    .hero .section-bg video {
+      object-position: center;
+    }
+    .hero .section-bg video.hero-video {
       pointer-events: none;
     }
 
@@ -699,14 +693,9 @@
   <!-- HERO -->
   <header class="hero video-section">
     <div class="section-bg">
-      <iframe
-        id="heroVideo"
-        class="hero-video"
-        src="https://www.youtube-nocookie.com/embed/GgPZ-Znzumk?autoplay=1&mute=1&loop=1&playlist=GgPZ-Znzumk&controls=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1"
-        title="FIFADAY hero video"
-        allow="autoplay; encrypted-media; picture-in-picture"
-        referrerpolicy="strict-origin-when-cross-origin"
-      ></iframe>
+      <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="auto">
+        <source src="/shakira-hero.mp4" type="video/mp4" />
+      </video>
     </div>
     <div class="section-overlay hero-overlay"></div>
     <div class="hero-content">
@@ -937,6 +926,17 @@
     }
 
     initFifaCountdown();
+
+    const heroVideo = document.getElementById('heroVideo');
+    if (heroVideo) {
+      heroVideo.muted = true;
+      const playHero = () => heroVideo.play().catch(() => {});
+      playHero();
+      heroVideo.addEventListener('ended', playHero);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) playHero();
+      });
+    }
 
     const COUNTRIES = [
       { name: 'Algeria', code: 'dz', odds: '+2800' },
