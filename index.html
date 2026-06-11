@@ -209,6 +209,60 @@
       content: '🏆';
       font-size: 14px;
     }
+
+    /* ── COUNTDOWN (synced with FIFA.com) ── */
+    .wc-countdown {
+      margin-bottom: 24px;
+    }
+    .wc-countdown-sub {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 12px;
+    }
+    .wc-countdown-grid {
+      display: inline-flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .wc-countdown-unit {
+      min-width: 72px;
+      text-align: center;
+      background: rgba(8, 18, 10, 0.72);
+      border: 1px solid rgba(255, 215, 0, 0.35);
+      border-radius: 12px;
+      padding: 12px 14px 10px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+    .wc-countdown-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 4.5vw, 2.8rem);
+      line-height: 1;
+      color: var(--gold);
+      text-shadow: 0 0 18px var(--gold-glow);
+    }
+    .wc-countdown-label {
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .wc-countdown-live {
+      display: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      color: var(--gold);
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 24px var(--gold-glow);
+    }
+    .wc-countdown.is-live .wc-countdown-grid { display: none; }
+    .wc-countdown.is-live .wc-countdown-live { display: block; }
+
     .hero h1 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(4rem, 11vw, 9rem);
@@ -646,6 +700,28 @@
     <div class="section-overlay hero-overlay"></div>
     <div class="hero-content">
       <div class="wc-badge">FIFA World Cup 2026 · Solana</div>
+      <div class="wc-countdown" id="wcCountdown">
+        <div class="wc-countdown-sub" id="countdownSubtitle">11 June – 19 July 2026</div>
+        <div class="wc-countdown-grid">
+          <div class="wc-countdown-unit">
+            <div class="wc-countdown-value" id="cdDays">--</div>
+            <div class="wc-countdown-label" id="cdDaysLabel">Days</div>
+          </div>
+          <div class="wc-countdown-unit">
+            <div class="wc-countdown-value" id="cdHours">--</div>
+            <div class="wc-countdown-label" id="cdHoursLabel">Hours</div>
+          </div>
+          <div class="wc-countdown-unit">
+            <div class="wc-countdown-value" id="cdMins">--</div>
+            <div class="wc-countdown-label" id="cdMinsLabel">mins</div>
+          </div>
+          <div class="wc-countdown-unit">
+            <div class="wc-countdown-value" id="cdSecs">--</div>
+            <div class="wc-countdown-label" id="cdSecsLabel">secs</div>
+          </div>
+        </div>
+        <div class="wc-countdown-live">KICK OFF — IT'S ON!</div>
+      </div>
       <h1>
         <span class="gold">FIFA</span>DAY<br />
         <span style="font-size:0.55em;color:rgba(255,255,255,0.85)">ON SOLANA</span>
@@ -810,6 +886,46 @@
 
   <script>
     const CA = 'soonpump';
+    const FIFA_COUNTDOWN_API = 'https://cxm-api.fifa.com/fifaplusweb/api/sections/countdownClock/7B39BZEPLF2pLgRHmcrBBN?locale=en';
+    const FIFA_EVENT_START_FALLBACK = '2026-06-11T19:00:00Z';
+
+    const pad = n => String(n).padStart(2, '0');
+    let countdownTarget = new Date(FIFA_EVENT_START_FALLBACK).getTime();
+
+    async function initFifaCountdown() {
+      try {
+        const res = await fetch(FIFA_COUNTDOWN_API);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.eventStart) countdownTarget = new Date(data.eventStart).getTime();
+          if (data.subtitle) document.getElementById('countdownSubtitle').textContent = data.subtitle;
+          if (data.daysLabel) document.getElementById('cdDaysLabel').textContent = data.daysLabel;
+          if (data.hoursLabel) document.getElementById('cdHoursLabel').textContent = data.hoursLabel;
+        }
+      } catch (_) { /* use FIFA fallback timestamp */ }
+
+      const tick = () => {
+        const diff = countdownTarget - Date.now();
+        const el = document.getElementById('wcCountdown');
+        if (diff <= 0) {
+          el.classList.add('is-live');
+          return;
+        }
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        document.getElementById('cdDays').textContent = pad(days);
+        document.getElementById('cdHours').textContent = pad(hours);
+        document.getElementById('cdMins').textContent = pad(mins);
+        document.getElementById('cdSecs').textContent = pad(secs);
+      };
+
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    initFifaCountdown();
 
     const heroVideo = document.getElementById('heroVideo');
     if (heroVideo) {
